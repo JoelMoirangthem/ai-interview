@@ -1,0 +1,51 @@
+services:
+  - type: web
+    name: ai-interview-coach-api
+    runtime: node
+    repo: https://github.com/JoelMoirangthem/ai-interview
+    plan: free
+    region: oregon
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && node server.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 18
+      - key: PORT
+        value: 3000
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: BLUESMINDS_API_KEY
+        sync: false
+      - key: LLM_MODEL
+        sync: false
+      - key: IMAGEKIT_PRIVATE_KEY
+        sync: false
+      - key: IMAGEKIT_PUBLIC_KEY
+        sync: false
+      - key: IMAGEKIT_URL_ENDPOINT
+        sync: false
+      - key: CORS_ORIGIN
+        value: https://ai-interview-coach.onrender.com
+
+  - type: web
+    name: ai-interview-coach
+    runtime: static
+    repo: https://github.com/JoelMoirangthem/ai-interview
+    plan: free
+    region: oregon
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: ./frontend/dist
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        value: https://ai-interview-coach-api.onrender.com/api
