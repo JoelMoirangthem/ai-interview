@@ -1,17 +1,17 @@
 const axios = require('axios');
 
-const API_URL = 'https://api.bluesminds.com/v1/chat/completions';
+const API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
-const callBluesminds = async (messages, temperature = 0.7, maxTokens = 2000) => {
+const callLLM = async (messages, temperature = 0.7, maxTokens = 2000) => {
   try {
     const response = await axios.post(API_URL, {
-      model: process.env.LLM_MODEL || 'kimi-k2.5',
+      model: process.env.LLM_MODEL || 'openai/gpt-oss-20b',
       messages,
       temperature,
       max_tokens: maxTokens
     }, {
       headers: {
-        'Authorization': `Bearer ${process.env.BLUESMINDS_API_KEY}`,
+        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
         'Content-Type': 'application/json'
       },
       timeout: 30000
@@ -47,7 +47,7 @@ No explanation, no markdown, only the JSON object.`
     }
   ];
 
-  const result = await callBluesminds(messages, 0.3, 1500);
+  const result = await callLLM(messages, 0.3, 1500);
   try {
     const cleaned = result.replace(/```json/g, '').replace(/```/g, '').trim();
     return JSON.parse(cleaned);
@@ -130,7 +130,7 @@ Remember: ONE question only. Be conversational. Be human.`;
     { role: 'user', content: userPrompt }
   ];
 
-  const result = await callBluesminds(messages, 0.8, 500);
+  const result = await callLLM(messages, 0.8, 500);
 
   return { question: result, requiresCode: isDSA && requiresCode(result) };
 };
@@ -163,7 +163,7 @@ Evaluate this answer and return the JSON score.`
     }
   ];
 
-  const result = await callBluesminds(messages, 0.3, 800);
+  const result = await callLLM(messages, 0.3, 800);
   try {
     const cleaned = result.replace(/```json/g, '').replace(/```/g, '').trim();
     return JSON.parse(cleaned);
@@ -219,7 +219,7 @@ Generate comprehensive feedback. Consider all answers, scores, and the candidate
     }
   ];
 
-  const result = await callBluesminds(messages, 0.4, 2000);
+  const result = await callLLM(messages, 0.4, 2000);
   try {
     const cleaned = result.replace(/```json/g, '').replace(/```/g, '').trim();
     return JSON.parse(cleaned);
@@ -278,7 +278,7 @@ Evaluate this code solution. Consider correctness, efficiency, code quality, and
     }
   ];
 
-  const result = await callBluesminds(messages, 0.3, 1000);
+  const result = await callLLM(messages, 0.3, 1000);
   try {
     const cleaned = result.replace(/```json/g, '').replace(/```/g, '').trim();
     return JSON.parse(cleaned);
