@@ -28,7 +28,7 @@ services:
       - key: IMAGEKIT_URL_ENDPOINT
         sync: false
       - key: CORS_ORIGIN
-        value: https://ai-interview-coach.onrender.com
+        value: https://ai-interview-coach.onrender.com,http://localhost:5173,http://localhost:5174
 
   - type: web
     name: ai-interview-coach
