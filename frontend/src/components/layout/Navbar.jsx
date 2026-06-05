@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiZap, FiLayout, FiClock, FiUser, FiLogOut, FiSettings, FiChevronDown } from 'react-icons/fi';
+import { FiZap, FiLayout, FiClock, FiUser, FiLogOut, FiSettings, FiChevronDown, FiCloudOff } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
+import { useAIStatus } from '../../hooks/useAIStatus';
 import Logo from '../Logo';
 
 const navLinks = [
@@ -33,6 +34,7 @@ export default function Navbar() {
   };
 
   const userInitial = user?.name?.[0]?.toUpperCase() || 'U';
+  const { aiAvailable, checking } = useAIStatus();
 
   return (
     <motion.nav
@@ -124,24 +126,25 @@ export default function Navbar() {
               </AnimatePresence>
             </div>
           ) : (
-            <>
-              <Link
-                to="/login"
-                className="hidden sm:inline-flex px-4 py-2 text-sm font-medium text-white/70 hover:text-white transition-colors"
-              >
-                Sign in
-              </Link>
-              <Link
-                to="/auth"
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl shadow-[0_4px_12px_-2px_rgba(99,102,241,0.5)] hover:shadow-[0_8px_20px_-4px_rgba(99,102,241,0.65)] transition-shadow"
-              >
-                Get started
-                <FiZap className="w-3.5 h-3.5" />
-              </Link>
-            </>
+            <Link
+              to="/auth"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl shadow-[0_4px_12px_-2px_rgba(99,102,241,0.5)] hover:shadow-[0_8px_20px_-4px_rgba(99,102,241,0.65)] transition-shadow"
+            >
+              Sign in
+              <FiZap className="w-3.5 h-3.5" />
+            </Link>
           )}
         </div>
       </div>
+
+      {user && !checking && !aiAvailable && (
+        <div className="border-t border-amber-400/20 bg-amber-500/10 backdrop-blur-xl">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1.5 flex items-center justify-center gap-2 text-xs text-amber-200">
+            <FiCloudOff className="w-3 h-3 shrink-0" />
+            <span>AI service is currently unavailable.</span>
+          </div>
+        </div>
+      )}
     </motion.nav>
   );
 }

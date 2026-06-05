@@ -2,6 +2,35 @@ const axios = require('axios');
 
 const API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
+let aiAvailable = true;
+
+const checkAIAvailability = async () => {
+  if (!process.env.GROQ_API_KEY) {
+    aiAvailable = false;
+    return false;
+  }
+  try {
+    const response = await axios.post(API_URL, {
+      model: process.env.LLM_MODEL || 'openai/gpt-oss-20b',
+      messages: [{ role: 'user', content: 'ping' }],
+      max_tokens: 1
+    }, {
+      headers: {
+        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      timeout: 5000
+    });
+    aiAvailable = response.status === 200;
+    return aiAvailable;
+  } catch {
+    aiAvailable = false;
+    return false;
+  }
+};
+
+const isAIAvailable = () => aiAvailable;
+
 const callLLM = async (messages, temperature = 0.7, maxTokens = 2000) => {
   try {
     const response = await axios.post(API_URL, {
@@ -17,11 +46,20 @@ const callLLM = async (messages, temperature = 0.7, maxTokens = 2000) => {
       timeout: 30000
     });
 
+    aiAvailable = true;
     return response.data.choices[0].message.content;
   } catch (error) {
     console.error('AI Service Error:', error.response?.data || error.message);
-    throw new Error('AI service failed');
+    aiAvailable = false;
+    throw new Error('AI service is unavailable. Please try again later.');
   }
+};
+
+const CODE_QUESTION_RE = /\b(write|implement|code|solve|create|develop|program|pseudocode|coding|refactor|optimize|convert|parse|build|construct|generate|traverse|sort|search)\b/i;
+
+const requiresCode = (question) => {
+  if (!question) return false;
+  return CODE_QUESTION_RE.test(question);
 };
 
 const parseResume = async (resumeText) => {
@@ -39,7 +77,7 @@ Return ONLY valid JSON with this exact structure:
   "weakAreas": ["weakness1"],
   "experienceLevel": "entry|junior|mid|senior|lead"
 }
-No explanation, no markdown, only the JSON object.`
+No explanation, no markdown, only the JSON.`
     },
     {
       role: 'user',
@@ -48,28 +86,8 @@ No explanation, no markdown, only the JSON object.`
   ];
 
   const result = await callLLM(messages, 0.3, 1500);
-  try {
-    const cleaned = result.replace(/```json/g, '').replace(/```/g, '').trim();
-    return JSON.parse(cleaned);
-  } catch (e) {
-    console.error('Failed to parse AI resume response:', result);
-    return {
-      skills: [],
-      projects: [],
-      technologies: [],
-      education: [],
-      strengths: [],
-      weakAreas: [],
-      experienceLevel: 'entry'
-    };
-  }
-};
-
-const CODE_QUESTION_RE = /\b(write|implement|code|solve|create|develop|program|pseudocode|coding|refactor|optimize|convert|parse|build|construct|generate|traverse|sort|search)\b/i;
-
-const requiresCode = (question) => {
-  if (!question) return false;
-  return CODE_QUESTION_RE.test(question);
+  const cleaned = result.replace(/```json/g, '').replace(/```/g, '').trim();
+  return JSON.parse(cleaned);
 };
 
 const generateInterviewQuestion = async ({ profile, conversationHistory, mode, difficulty, user }) => {
@@ -103,11 +121,11 @@ RULES - CRITICAL:
 8. NEVER reveal you are scoring or evaluating.
 9. NEVER break character as an interviewer.
 10. Keep questions concise (1-3 sentences).
-
 11. Adapt to the candidate's experience level.
 12. Start with general questions, then get specific.
-13. For DSA roles, focus  on problem-solving and coding questions to implement code.
-`;
+13. For DSA roles, focus on problem-solving and coding questions to implement code.
+14. The candidate's weak areas are: ${profile?.weakAreas?.join(', ') || 'unknown'}. Avoid asking questions in these areas unless they demonstrate readiness. Focus on their strengths first.
+15. If the candidate struggles with a question, offer encouragement and pivot to a different topic. Never make them feel bad.`;
 
   const userPrompt = `${profileContext}
 
@@ -131,7 +149,6 @@ Remember: ONE question only. Be conversational. Be human.`;
   ];
 
   const result = await callLLM(messages, 0.8, 500);
-
   return { question: result, requiresCode: isDSA && requiresCode(result) };
 };
 
@@ -164,20 +181,8 @@ Evaluate this answer and return the JSON score.`
   ];
 
   const result = await callLLM(messages, 0.3, 800);
-  try {
-    const cleaned = result.replace(/```json/g, '').replace(/```/g, '').trim();
-    return JSON.parse(cleaned);
-  } catch (e) {
-    return {
-      technicalAccuracy: 5,
-      communication: 5,
-      confidence: 5,
-      problemSolving: 5,
-      completeness: 5,
-      depthOfUnderstanding: 5,
-      notes: 'Evaluation parsing failed'
-    };
-  }
+  const cleaned = result.replace(/```json/g, '').replace(/```/g, '').trim();
+  return JSON.parse(cleaned);
 };
 
 const generateFeedback = async ({ conversations, mode, profile }) => {
@@ -220,27 +225,8 @@ Generate comprehensive feedback. Consider all answers, scores, and the candidate
   ];
 
   const result = await callLLM(messages, 0.4, 2000);
-  try {
-    const cleaned = result.replace(/```json/g, '').replace(/```/g, '').trim();
-    return JSON.parse(cleaned);
-  } catch (e) {
-    return {
-      overallScore: 50,
-      technicalScore: 50,
-      communicationScore: 50,
-      confidenceScore: 50,
-      problemSolvingScore: 50,
-      interviewReadinessScore: 50,
-      strengths: [{ name: 'Participation', evidence: 'Completed the interview' }],
-      weaknesses: [{ name: 'General', evidence: 'Need more practice' }],
-      recommendation: 'needs-improvement',
-      improvementRoadmap: {
-        immediate: ['Review fundamentals'],
-        shortTerm: ['Practice more interviews'],
-        longTerm: ['Build more projects']
-      }
-    };
-  }
+  const cleaned = result.replace(/```json/g, '').replace(/```/g, '').trim();
+  return JSON.parse(cleaned);
 };
 
 const evaluateCode = async ({ code, language, question, stdout, stderr }) => {
@@ -279,21 +265,8 @@ Evaluate this code solution. Consider correctness, efficiency, code quality, and
   ];
 
   const result = await callLLM(messages, 0.3, 1000);
-  try {
-    const cleaned = result.replace(/```json/g, '').replace(/```/g, '').trim();
-    return JSON.parse(cleaned);
-  } catch (e) {
-    return {
-      score: 50,
-      correctness: 'partial',
-      timeComplexity: 'N/A',
-      spaceComplexity: 'N/A',
-      codeQuality: 5,
-      strengths: ['Attempted the problem'],
-      weaknesses: ['Unable to fully evaluate'],
-      feedback: 'Evaluation parsing failed'
-    };
-  }
+  const cleaned = result.replace(/```json/g, '').replace(/```/g, '').trim();
+  return JSON.parse(cleaned);
 };
 
-module.exports = { parseResume, generateInterviewQuestion, evaluateAnswer, generateFeedback, evaluateCode };
+module.exports = { parseResume, generateInterviewQuestion, evaluateAnswer, generateFeedback, evaluateCode, checkAIAvailability, isAIAvailable };

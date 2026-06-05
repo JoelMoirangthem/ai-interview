@@ -22,22 +22,6 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  const login = async (email, password) => {
-    const res = await authAPI.login({ email, password });
-    localStorage.setItem('token', res.data.token);
-    localStorage.setItem('user', JSON.stringify(res.data.user));
-    setUser(res.data.user);
-    return res.data;
-  };
-
-  const register = async (name, email, password) => {
-    const res = await authAPI.register({ name, email, password });
-    localStorage.setItem('token', res.data.token);
-    localStorage.setItem('user', JSON.stringify(res.data.user));
-    setUser(res.data.user);
-    return res.data;
-  };
-
   const googleLogin = async ({ uid, email, name, photoURL }) => {
     const res = await authAPI.googleLogin({ uid, email, name, photoURL });
     localStorage.setItem('token', res.data.token);
@@ -58,7 +42,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, googleLogin, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, googleLogin, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

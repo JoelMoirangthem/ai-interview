@@ -21,15 +21,13 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      window.location.href = '/auth';
     }
     return Promise.reject(error);
   }
 );
 
 export const authAPI = {
-  register: (data) => api.post('/auth/register', data),
-  login: (data) => api.post('/auth/login', data),
   googleLogin: (data) => api.post('/auth/google', data),
   getMe: () => api.get('/auth/me'),
   updateProfile: (data) => api.put('/auth/profile', data)
@@ -61,6 +59,11 @@ export const codeAPI = {
 export const analyticsAPI = {
   getDashboard: () => api.get('/analytics/dashboard'),
   getProgress: () => api.get('/analytics/progress')
+};
+
+export const healthAPI = {
+  check: () => api.get('/health'),
+  checkAI: () => api.get('/health/ai')
 };
 
 export default api;

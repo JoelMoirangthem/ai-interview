@@ -44,6 +44,15 @@ const execute = async (req, res) => {
     if (!code || !language) {
       return res.status(400).json({ message: 'Code and language are required' });
     }
+    if (typeof code !== 'string' || code.trim().length === 0) {
+      return res.status(400).json({ message: 'Code cannot be empty' });
+    }
+    if (code.length > 50000) {
+      return res.status(400).json({ message: 'Code must be under 50000 characters' });
+    }
+    if (typeof language !== 'string' || language.length > 20) {
+      return res.status(400).json({ message: 'Invalid language' });
+    }
 
     const result = await runCode(code, language);
 
@@ -69,6 +78,15 @@ const submit = async (req, res) => {
   if (!code || !language) {
     return res.status(400).json({ message: 'Code and language are required' });
   }
+  if (typeof code !== 'string' || code.trim().length === 0) {
+    return res.status(400).json({ message: 'Code cannot be empty' });
+  }
+  if (code.length > 50000) {
+    return res.status(400).json({ message: 'Code must be under 50000 characters' });
+  }
+  if (typeof language !== 'string' || language.length > 20) {
+    return res.status(400).json({ message: 'Invalid language' });
+  }
 
   let stdout = '', stderr = '', execError = null;
   try {
@@ -80,58 +98,51 @@ const submit = async (req, res) => {
     stderr = execError;
   }
 
-  let evaluation = null;
-  try {
-    evaluation = await evaluateCode({ code, language, question, stdout, stderr });
-  } catch (_) {
-    evaluation = { score: 0, feedback: 'Evaluation failed' };
-  }
+  const evaluation = await evaluateCode({ code, language, question, stdout, stderr });
 
   let nextQuestion = null;
   let requiresCode = false;
 
   if (interviewId) {
-    try {
-      const interview = await Interview.findById(interviewId);
-      if (interview) {
-        const lastConv = interview.conversations[interview.conversations.length - 1];
-        if (lastConv && !lastConv.answer) {
-          lastConv.code = code;
-          lastConv.language = language;
-          lastConv.codeOutput = stdout;
-          lastConv.codeEval = evaluation;
+    const interview = await Interview.findById(interviewId);
+    if (interview) {
+      const lastConv = interview.conversations[interview.conversations.length - 1];
+      if (lastConv) {
+        lastConv.code = code;
+        lastConv.language = language;
+        lastConv.codeOutput = stdout;
+        lastConv.codeEval = evaluation;
+        if (!lastConv.answer) {
           lastConv.answer = '[Code Submission]';
-          lastConv.timestamp = new Date();
-
-          const avgScore = (evaluation?.score || 50) / 10;
-          if (avgScore >= 7 && interview.difficulty === 'easy') {
-            interview.difficulty = 'medium';
-          } else if (avgScore >= 8 && interview.difficulty === 'medium') {
-            interview.difficulty = 'hard';
-          } else if (avgScore < 4 && interview.difficulty === 'hard') {
-            interview.difficulty = 'medium';
-          } else if (avgScore < 3 && interview.difficulty === 'medium') {
-            interview.difficulty = 'easy';
-          }
-
-          const resume = await Resume.findOne({ userId: interview.userId });
-          const qResult = await generateInterviewQuestion({
-            profile: resume?.profile || null,
-            conversationHistory: interview.conversations,
-            mode: interview.mode,
-            difficulty: interview.difficulty,
-            user: { _id: interview.userId }
-          });
-
-          nextQuestion = qResult.question || qResult;
-          requiresCode = qResult.requiresCode === true;
-
-          interview.conversations.push({ question: nextQuestion, answer: '', timestamp: new Date() });
         }
-        await interview.save();
+        lastConv.timestamp = new Date();
+
+        const avgScore = (evaluation?.score || 50) / 10;
+        if (avgScore >= 7 && interview.difficulty === 'easy') {
+          interview.difficulty = 'medium';
+        } else if (avgScore >= 8 && interview.difficulty === 'medium') {
+          interview.difficulty = 'hard';
+        } else if (avgScore < 4 && interview.difficulty === 'hard') {
+          interview.difficulty = 'medium';
+        } else if (avgScore < 3 && interview.difficulty === 'medium') {
+          interview.difficulty = 'easy';
+        }
+
+        const resume = await Resume.findOne({ userId: interview.userId });
+        const qResult = await generateInterviewQuestion({
+          profile: resume?.profile || null,
+          conversationHistory: interview.conversations,
+          mode: interview.mode,
+          difficulty: interview.difficulty,
+          user: { _id: interview.userId }
+        });
+
+        nextQuestion = qResult.question || qResult;
+        requiresCode = qResult.requiresCode === true;
+
+        interview.conversations.push({ question: nextQuestion, requiresCode, answer: '', timestamp: new Date() });
       }
-    } catch (dbErr) {
-      console.error('Code submit DB error:', dbErr.message);
+      await interview.save();
     }
   }
 

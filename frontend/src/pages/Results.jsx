@@ -3,9 +3,10 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   FiCheck, FiArrowRight, FiHome, FiZap, FiTarget, FiAlertTriangle,
-  FiAward, FiCpu, FiMessageCircle, FiTrendingUp, FiBookOpen, FiCode
+  FiAward, FiCpu, FiMessageCircle, FiTrendingUp, FiBookOpen, FiCode, FiCloudOff
 } from 'react-icons/fi';
 import { interviewAPI } from '../services/api';
+import { useAIStatus } from '../hooks/useAIStatus';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
@@ -37,6 +38,7 @@ const roadmapConfig = [
 export default function Results() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { aiAvailable } = useAIStatus();
   const [interview, setInterview] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -79,6 +81,17 @@ export default function Results() {
           </h1>
           <p className="text-white/50 mt-2">{interview.mode} Interview</p>
         </motion.div>
+
+        {!aiAvailable && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-2 bg-amber-500/10 border border-amber-400/20 text-amber-200 text-sm rounded-xl px-4 py-3 mb-6"
+          >
+            <FiCloudOff className="w-4 h-4 shrink-0" />
+            <span>AI service was unavailable during this interview. Results may be incomplete.</span>
+          </motion.div>
+        )}
 
         {/* HERO SCORE */}
         <motion.div

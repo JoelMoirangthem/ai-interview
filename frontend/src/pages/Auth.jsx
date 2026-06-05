@@ -1,12 +1,11 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { signInWithPopup } from 'firebase/auth';
 import { auth, provider } from '../firebase';
 import { useAuth } from '../context/AuthContext';
-import Button from '../components/ui/Button';
 import Logo from '../components/Logo';
-import { FiZap, FiAlertCircle, FiArrowRight, FiShield } from 'react-icons/fi';
+import { FiZap, FiAlertCircle, FiShield } from 'react-icons/fi';
 
 export default function Auth() {
   const [error, setError] = useState('');
@@ -29,7 +28,11 @@ export default function Auth() {
       navigate('/dashboard');
     } catch (err) {
       if (err.code === 'auth/popup-closed-by-user') return;
-      setError(err.message || 'Google sign-in failed');
+      if (err.code === 'auth/unauthorized-domain') {
+        setError('This domain is not authorized for Google sign-in.');
+        return;
+      }
+      setError('Google sign-in failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -90,27 +93,9 @@ export default function Auth() {
             Continue with Google
           </button>
 
-          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-emerald-500/[0.04] border border-emerald-400/10 text-xs text-white/60 mb-5">
+          <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-emerald-500/[0.04] border border-emerald-400/10 text-xs text-white/60">
             <FiShield className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
             <span>We never see your Google password. Sign-in uses secure OAuth.</span>
-          </div>
-
-          <div className="relative my-5">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/[0.06]" />
-            </div>
-            <div className="relative flex justify-center text-xs">
-              <span className="bg-[#0c0d12] px-3 text-white/40 tracking-wider uppercase">or</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <Link to="/login">
-              <Button variant="secondary" className="w-full" size="md">Sign in</Button>
-            </Link>
-            <Link to="/register">
-              <Button variant="ghost" className="w-full" size="md" iconRight={FiArrowRight}>Register</Button>
-            </Link>
           </div>
         </div>
       </motion.div>

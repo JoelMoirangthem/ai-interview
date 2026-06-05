@@ -91,13 +91,18 @@ const updateResumeProfile = async (req, res) => {
       return res.status(404).json({ message: 'No resume found' });
     }
 
-    if (skills) resume.profile.skills = skills;
-    if (technologies) resume.profile.technologies = technologies;
-    if (projects) resume.profile.projects = projects;
-    if (education) resume.profile.education = education;
-    if (strengths) resume.profile.strengths = strengths;
-    if (weakAreas) resume.profile.weakAreas = weakAreas;
-    if (experienceLevel) resume.profile.experienceLevel = experienceLevel;
+    if (skills !== undefined) resume.profile.skills = skills.slice(0, 50);
+    if (technologies !== undefined) resume.profile.technologies = technologies.slice(0, 50);
+    if (projects !== undefined) resume.profile.projects = projects.slice(0, 30);
+    if (education !== undefined) resume.profile.education = education.slice(0, 20);
+    if (strengths !== undefined) resume.profile.strengths = strengths.slice(0, 20);
+    if (weakAreas !== undefined) resume.profile.weakAreas = weakAreas.slice(0, 20);
+    if (experienceLevel !== undefined) {
+      const valid = ['entry', 'junior', 'mid', 'senior', 'lead'];
+      if (valid.includes(experienceLevel)) {
+        resume.profile.experienceLevel = experienceLevel;
+      }
+    }
 
     await resume.save();
 

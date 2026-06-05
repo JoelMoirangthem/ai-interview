@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const conversationSchema = new mongoose.Schema({
   question: String,
+  requiresCode: { type: Boolean, default: false },
   answer: String,
   code: String,
   language: String,

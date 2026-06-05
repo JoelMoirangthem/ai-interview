@@ -2,15 +2,15 @@ import { Routes, Route } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import Navbar from './components/layout/Navbar';
 import ProtectedRoute from './components/layout/ProtectedRoute';
+import ErrorBoundary from './components/ErrorBoundary';
 import Home from './pages/Home';
-import Login from './pages/Login';
-import Register from './pages/Register';
 import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import InterviewSetup from './pages/InterviewSetup';
 import InterviewRoom from './pages/InterviewRoom';
 import Results from './pages/Results';
 import History from './pages/History';
+import NotFound from './pages/NotFound';
 
 export default function App() {
   return (
@@ -19,14 +19,13 @@ export default function App() {
       <AnimatePresence mode="wait">
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/interview/setup" element={<ProtectedRoute><InterviewSetup /></ProtectedRoute>} />
-          <Route path="/interview/:id" element={<ProtectedRoute><InterviewRoom /></ProtectedRoute>} />
-          <Route path="/results/:id" element={<ProtectedRoute><Results /></ProtectedRoute>} />
-          <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><ErrorBoundary><Dashboard /></ErrorBoundary></ProtectedRoute>} />
+          <Route path="/interview/setup" element={<ProtectedRoute><ErrorBoundary><InterviewSetup /></ErrorBoundary></ProtectedRoute>} />
+          <Route path="/interview/:id" element={<ProtectedRoute><ErrorBoundary><InterviewRoom /></ErrorBoundary></ProtectedRoute>} />
+          <Route path="/results/:id" element={<ProtectedRoute><ErrorBoundary><Results /></ErrorBoundary></ProtectedRoute>} />
+          <Route path="/history" element={<ProtectedRoute><ErrorBoundary><History /></ErrorBoundary></ProtectedRoute>} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </AnimatePresence>
     </div>

@@ -1,3 +1,4 @@
+const { Types } = require('mongoose');
 const Interview = require('../models/Interview');
 const Resume = require('../models/Resume');
 const User = require('../models/User');
@@ -9,7 +10,7 @@ const startInterview = async (req, res) => {
   try {
     const { mode } = req.body;
 
-    if (!INTERVIEW_MODES.includes(mode)) {
+    if (!mode || typeof mode !== 'string' || !INTERVIEW_MODES.includes(mode)) {
       return res.status(400).json({ message: 'Invalid interview mode' });
     }
 
@@ -35,7 +36,7 @@ const startInterview = async (req, res) => {
     const question = result.question || result;
     const requiresCode = result.requiresCode === true;
 
-    interview.conversations.push({ question, answer: '', timestamp: new Date() });
+    interview.conversations.push({ question, requiresCode, answer: '', timestamp: new Date() });
     await interview.save();
 
     interviewState.set(interview._id, {
@@ -60,7 +61,13 @@ const submitAnswer = async (req, res) => {
   try {
     const { interviewId, answer } = req.body;
 
-    if (!answer || answer.trim().length === 0) {
+    if (!interviewId) {
+      return res.status(400).json({ message: 'Interview ID is required' });
+    }
+    if (!Types.ObjectId.isValid(interviewId)) {
+      return res.status(400).json({ message: 'Invalid interview ID' });
+    }
+    if (!answer || typeof answer !== 'string' || answer.trim().length === 0) {
       return res.status(400).json({ message: 'Answer is required' });
     }
 
@@ -97,11 +104,15 @@ const submitAnswer = async (req, res) => {
       depthOfUnderstanding: evaluation.depthOfUnderstanding || 0
     };
 
-    const avgScore = (
-      evaluation.technicalAccuracy + evaluation.communication +
-      evaluation.confidence + evaluation.problemSolving +
-      evaluation.completeness + evaluation.depthOfUnderstanding
-    ) / 6;
+    const scores = [
+      evaluation.technicalAccuracy || 0,
+      evaluation.communication || 0,
+      evaluation.confidence || 0,
+      evaluation.problemSolving || 0,
+      evaluation.completeness || 0,
+      evaluation.depthOfUnderstanding || 0
+    ];
+    const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
 
     if (avgScore >= 7 && interview.difficulty === 'easy') {
       interview.difficulty = 'medium';
@@ -139,7 +150,7 @@ const submitAnswer = async (req, res) => {
     const nextQuestion = result.question || result;
     const requiresCode = result.requiresCode === true;
 
-    interview.conversations.push({ question: nextQuestion, answer: '', timestamp: new Date() });
+    interview.conversations.push({ question: nextQuestion, requiresCode, answer: '', timestamp: new Date() });
     await interview.save();
 
     res.json({
@@ -156,6 +167,9 @@ const submitAnswer = async (req, res) => {
 
 const completeInterview = async (req, res) => {
   try {
+    if (!Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid interview ID' });
+    }
     const interview = await Interview.findById(req.params.id);
     if (!interview) {
       return res.status(404).json({ message: 'Interview not found' });
@@ -208,6 +222,9 @@ const completeInterview = async (req, res) => {
 
 const getInterview = async (req, res) => {
   try {
+    if (!Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid interview ID' });
+    }
     const interview = await Interview.findById(req.params.id);
     if (!interview) {
       return res.status(404).json({ message: 'Interview not found' });

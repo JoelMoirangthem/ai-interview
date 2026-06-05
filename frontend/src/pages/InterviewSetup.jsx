@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiArrowRight, FiUpload, FiFileText, FiCheck, FiX, FiZap, FiSkipForward,
-  FiUser, FiTarget, FiAlertCircle
+  FiUser, FiTarget, FiAlertCircle, FiCloudOff
 } from 'react-icons/fi';
 import { interviewAPI, resumeAPI } from '../services/api';
+import { useAIStatus } from '../hooks/useAIStatus';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
@@ -19,6 +20,7 @@ const steps = [
 
 export default function InterviewSetup() {
   const navigate = useNavigate();
+  const { aiAvailable } = useAIStatus();
   const [loading, setLoading] = useState(true);
   const [modes, setModes] = useState([]);
   const [selectedMode, setSelectedMode] = useState('');
@@ -162,6 +164,17 @@ export default function InterviewSetup() {
           </motion.div>
         )}
 
+        {!aiAvailable && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-2 bg-amber-500/10 border border-amber-400/20 text-amber-200 text-sm rounded-xl px-3.5 py-3 mb-6"
+          >
+            <FiCloudOff className="w-4 h-4 shrink-0" />
+            <span>AI service is offline. You cannot start an interview right now. Please try again later.</span>
+          </motion.div>
+        )}
+
         <AnimatePresence mode="wait">
           {step === 1 ? (
             <motion.div
@@ -282,7 +295,7 @@ export default function InterviewSetup() {
                   size="lg"
                   onClick={handleStart}
                   loading={starting}
-                  disabled={!selectedMode}
+                  disabled={!selectedMode || !aiAvailable}
                   iconRight={FiArrowRight}
                 >
                   Start Interview

@@ -20,6 +20,6 @@ export default function ProtectedRoute({ children }) {
     );
   }
 
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/auth" replace />;
   return children;
 }

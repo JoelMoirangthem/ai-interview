@@ -3,10 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiAlertTriangle, FiClock, FiX, FiZap, FiCheckCircle, FiMessageSquare,
-  FiArrowRight, FiCode, FiCpu
+  FiArrowRight, FiCode, FiCpu, FiCloudOff
 } from 'react-icons/fi';
 import { interviewAPI, codeAPI } from '../services/api';
 import { useVoice } from '../hooks/useVoice';
+import { useAIStatus } from '../hooks/useAIStatus';
 import MicButton from '../components/interview/MicButton';
 import VoiceVisualizer from '../components/interview/VoiceVisualizer';
 import Captions from '../components/interview/Captions';
@@ -52,6 +53,8 @@ export default function InterviewRoom() {
   const navigate = useNavigate();
   const { micOn, aiSpeaking, transcript, toggleMic, speak, cancelSpeech, isSupported } = useVoice();
 
+  const { aiAvailable } = useAIStatus();
+
   const [mode, setMode] = useState('');
   const [difficulty, setDifficulty] = useState('easy');
   const [conversations, setConversations] = useState([]);
@@ -63,6 +66,7 @@ export default function InterviewRoom() {
   // Default to false — only show editor when an actual question requires code
   const [showEditor, setShowEditor] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+  const [error, setError] = useState('');
 
   const submitRef = useRef(null);
   const processingRef = useRef(false);
@@ -91,9 +95,10 @@ export default function InterviewRoom() {
       setAiThinking(false);
       processingRef.current = false;
       speakQuestion(res.data.nextQuestion);
-    } catch (_) {
+    } catch (err) {
       setAiThinking(false);
       processingRef.current = false;
+      setError(err.response?.data?.message || 'AI service is unavailable. Please try again.');
     }
   }, [id, conversations, speakQuestion]);
 
@@ -157,26 +162,35 @@ export default function InterviewRoom() {
     try {
       await interviewAPI.complete(id);
       navigate(`/results/${id}`);
-    } catch (_) {
+    } catch (err) {
       setIsCompleting(false);
+      setError(err.response?.data?.message || 'AI service is unavailable.');
     }
   };
 
   const handleCodeRun = async (code, language) => {
+    if (!code || code.trim().length === 0) {
+      setCodeOutput('Please write some code before running.');
+      return;
+    }
     setCodeLoading('run');
     setCodeOutput('');
     try {
       const res = await codeAPI.execute({ code, language });
       const out = res.data.stdout || res.data.stderr || '(no output)';
       setCodeOutput(out);
-    } catch (_) {
-      setCodeOutput('Execution failed. Check your code and try again.');
+    } catch (err) {
+      setCodeOutput(err.response?.data?.message || 'Execution failed. Check your code and try again.');
     } finally {
       setCodeLoading(null);
     }
   };
 
   const handleCodeSubmit = async (code, language) => {
+    if (!code || code.trim().length === 0) {
+      setCodeOutput('Please write some code before submitting.');
+      return;
+    }
     setCodeLoading('submit');
     setCodeOutput('');
     const lastQ = conversations[conversations.length - 1]?.question;
@@ -202,8 +216,8 @@ export default function InterviewRoom() {
       } else {
         setCodeOutput(stdout || stderr || 'Submission processed');
       }
-    } catch (_) {
-      setCodeOutput('Submission failed. Try again.');
+    } catch (err) {
+      setCodeOutput(err.response?.data?.message || 'Submission failed. Try again.');
     } finally {
       setCodeLoading(null);
     }
@@ -228,6 +242,13 @@ export default function InterviewRoom() {
       </div>
     );
   }
+
+  const offlineBanner = !aiAvailable && (
+    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-400/20 text-xs text-amber-200 mb-3">
+      <FiCloudOff className="w-3 h-3 shrink-0" />
+      <span>AI service is unavailable. You cannot submit answers right now.</span>
+    </div>
+  );
 
   if (!isSupported) {
     return (
@@ -262,6 +283,16 @@ export default function InterviewRoom() {
 
   const conversationPanel = (
     <div className="flex flex-col h-full">
+      {offlineBanner}
+      {error && (
+        <div className="flex items-center gap-2 px-3 py-2 mb-3 rounded-lg bg-rose-500/10 border border-rose-400/20 text-xs text-rose-200">
+          <FiAlertTriangle className="w-3 h-3 shrink-0" />
+          <span>{error}</span>
+          <button onClick={() => setError('')} className="ml-auto text-rose-300 hover:text-white">
+            <FiX className="w-3 h-3" />
+          </button>
+        </div>
+      )}
       {/* TOP BAR */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2 flex-wrap">
