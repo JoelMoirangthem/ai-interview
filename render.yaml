@@ -28,7 +28,7 @@ services:
       - key: IMAGEKIT_URL_ENDPOINT
         sync: false
       - key: CORS_ORIGIN
-        value: https://ai-interview-coach.onrender.com,http://localhost:5173,http://localhost:5174
+        value: https://ai-interview-coach.onrender.com,https://ai-interview-coach-mwke.onrender.com,http://localhost:5173,http://localhost:5174
 
   - type: web
     name: ai-interview-coach
@@ -48,4 +48,16 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_URL
-        value: https://ai-interview-coach-api.onrender.com/api
+        value: https://ai-interview-coach-api-mwke.onrender.com/api
+      - key: VITE_FIREBASE_API
+        value: AIzaSyA9-lXJzhSKdMAQY9c-dWwL1HETY24TM7Y
+      - key: VITE_FIREBASE_AUTH_DOMAIN
+        value: ai-interview-9a2d4.firebaseapp.com
+      - key: VITE_FIREBASE_PROJECT_ID
+        value: ai-interview-9a2d4
+      - key: VITE_FIREBASE_STORAGE_BUCKET
+        value: ai-interview-9a2d4.firebasestorage.app
+      - key: VITE_FIREBASE_MESSAGING_SENDER_ID
+        value: "88518098812"
+      - key: VITE_FIREBASE_APP_ID
+        value: 1:88518098812:web:79c47bcf90dac6304a2ef9
