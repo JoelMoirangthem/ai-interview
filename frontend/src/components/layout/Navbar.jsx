@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiZap, FiLayout, FiClock, FiUser, FiLogOut, FiSettings, FiChevronDown, FiCloudOff } from 'react-icons/fi';
+import { FiZap, FiLayout, FiClock, FiUser, FiLogOut, FiSettings, FiChevronDown } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
-import { useAIStatus } from '../../hooks/useAIStatus';
 import Logo from '../Logo';
 
 const navLinks = [
@@ -34,7 +33,6 @@ export default function Navbar() {
   };
 
   const userInitial = user?.name?.[0]?.toUpperCase() || 'U';
-  const { aiAvailable, checking } = useAIStatus();
 
   return (
     <motion.nav
@@ -94,7 +92,7 @@ export default function Navbar() {
               >
                 <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold overflow-hidden">
                   {user.avatar
-                    ? <img src={user.avatar} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    ? <img src={user.avatar} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" onError={(e) => { e.target.style.display = 'none'; }} />
                     : userInitial}
                 </div>
                 <span className="hidden sm:inline text-sm font-medium text-white/80 max-w-[120px] truncate">{user.name}</span>
@@ -137,14 +135,6 @@ export default function Navbar() {
         </div>
       </div>
 
-      {user && !checking && !aiAvailable && (
-        <div className="border-t border-amber-400/20 bg-amber-500/10 backdrop-blur-xl">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1.5 flex items-center justify-center gap-2 text-xs text-amber-200">
-            <FiCloudOff className="w-3 h-3 shrink-0" />
-            <span>AI service is currently unavailable.</span>
-          </div>
-        </div>
-      )}
     </motion.nav>
   );
 }

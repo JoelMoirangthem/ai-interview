@@ -10,14 +10,14 @@ services:
     healthCheckPath: /api/health
     envVars:
       - key: NODE_VERSION
-        value: 18
+        value: 20
       - key: PORT
         value: 3000
       - key: MONGO_URI
         sync: false
       - key: JWT_SECRET
         sync: false
-      - key: BLUESMINDS_API_KEY
+      - key: GROQ_API_KEY
         sync: false
       - key: LLM_MODEL
         sync: false
@@ -27,8 +27,6 @@ services:
         sync: false
       - key: IMAGEKIT_URL_ENDPOINT
         sync: false
-      - key: CORS_ORIGIN
-        value: https://ai-interview-coach.onrender.com
 
   - type: web
     name: ai-interview-coach

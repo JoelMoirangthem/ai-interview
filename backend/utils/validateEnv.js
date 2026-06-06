@@ -20,7 +20,7 @@ const validateEnv = () => {
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`MongoDB: ${process.env.MONGO_URI ? 'configured' : 'missing'}`);
   console.log(`JWT: ${process.env.JWT_SECRET ? 'configured' : 'missing'}`);
-  console.log(`GROQ: ${process.env.GROQ_API_KEY ? 'configured' : 'not set (AI fallback mode)'}`);
+  console.log(`GROQ: ${process.env.GROQ_API_KEY ? 'configured' : 'not set'}`);
   console.log(`ImageKit: ${process.env.IMAGEKIT_PRIVATE_KEY ? 'configured' : 'not set'}`);
 };
 

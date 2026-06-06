@@ -7,6 +7,16 @@ const { protect } = require('../middleware/auth');
 
 const router = express.Router();
 
+router.post('/logout', (req, res) => {
+  const isProduction = process.env.NODE_ENV === 'production';
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax'
+  });
+  res.json({ message: 'Logged out successfully' });
+});
+
 router.post('/google', [
   body('uid').notEmpty().withMessage('Google UID required'),
   body('email').isEmail().withMessage('Valid email required').normalizeEmail(),

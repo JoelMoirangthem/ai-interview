@@ -154,8 +154,12 @@ export function useVoice() {
       };
 
       if (synth.getVoices().length === 0) {
-        synth.onvoiceschanged = () => { synth.onvoiceschanged = null; trySpeak(); };
-        setTimeout(trySpeak, 300);
+        const fallbackTimer = setTimeout(trySpeak, 300);
+        synth.onvoiceschanged = () => {
+          synth.onvoiceschanged = null;
+          clearTimeout(fallbackTimer);
+          trySpeak();
+        };
       } else {
         trySpeak();
       }

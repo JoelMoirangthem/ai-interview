@@ -266,10 +266,10 @@ export default function History() {
                             </div>
                             <p className="text-xs text-white/40 flex items-center gap-1">
                               <FiClock className="w-3 h-3" />
-                              {new Date(i.startedAt).toLocaleDateString(undefined, {
+                              {i.startedAt ? new Date(i.startedAt).toLocaleDateString(undefined, {
                                 month: 'short', day: 'numeric', year: 'numeric',
                                 hour: '2-digit', minute: '2-digit'
-                              })}
+                              }) : '—'}
                             </p>
                           </div>
 

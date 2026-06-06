@@ -10,8 +10,16 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const provider = new GoogleAuthProvider();
+let app;
+let auth;
+let provider;
+
+try {
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  provider = new GoogleAuthProvider();
+} catch (e) {
+  console.error('Firebase initialization failed:', e);
+}
 
 export { auth, provider };

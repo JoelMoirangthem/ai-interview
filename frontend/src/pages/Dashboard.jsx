@@ -29,10 +29,12 @@ export default function Dashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const [error, setError] = useState('');
+
   useEffect(() => {
     analyticsAPI.getDashboard()
       .then(res => setData(res.data))
-      .catch(() => {})
+      .catch(() => setError('Failed to load dashboard data'))
       .finally(() => setLoading(false));
   }, []);
 
@@ -60,6 +62,13 @@ export default function Dashboard() {
   return (
     <div className="relative min-h-screen mesh-bg pt-24 pb-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
+        {error && (
+          <div className="flex items-center gap-2 bg-rose-500/10 border border-rose-400/20 text-rose-200 text-sm rounded-xl px-4 py-3 mb-6">
+            <FiAlertTriangle className="w-4 h-4 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
         {/* HEADER */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -155,10 +164,10 @@ export default function Dashboard() {
                   </div>
                   {recentScores.length > 1 ? (
                     <div className="grid grid-cols-2 gap-4">
-                      <ProgressChart data={recentScores.map(s => s.overall)}       color="indigo"  label="Overall"       />
-                      <ProgressChart data={recentScores.map(s => s.technical)}     color="emerald" label="Technical"     />
-                      <ProgressChart data={recentScores.map(s => s.communication)} color="cyan"    label="Communication" />
-                      <ProgressChart data={recentScores.map(s => s.confidence)}    color="amber"   label="Confidence"    />
+                      <ProgressChart data={recentScores.map(s => s?.overall ?? 0)}       color="indigo"  label="Overall"       />
+                      <ProgressChart data={recentScores.map(s => s?.technical ?? 0)}     color="emerald" label="Technical"     />
+                      <ProgressChart data={recentScores.map(s => s?.communication ?? 0)} color="cyan"    label="Communication" />
+                      <ProgressChart data={recentScores.map(s => s?.confidence ?? 0)}    color="amber"   label="Confidence"    />
                     </div>
                   ) : (
                     <div className="text-center py-8 text-sm text-white/40">
@@ -247,7 +256,7 @@ export default function Dashboard() {
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-white truncate">{i.mode}</p>
                               <p className="text-xs text-white/40 mt-0.5">
-                                {new Date(i.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                                {i.date ? new Date(i.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
                               </p>
                             </div>
                             <Badge

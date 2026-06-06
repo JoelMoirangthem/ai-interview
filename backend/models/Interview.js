@@ -7,6 +7,7 @@ const conversationSchema = new mongoose.Schema({
   code: String,
   language: String,
   codeOutput: String,
+  stderr: String,
   codeEval: {
     score: Number,
     correctness: String,

@@ -3,11 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FiAlertTriangle, FiClock, FiX, FiZap, FiCheckCircle, FiMessageSquare,
-  FiArrowRight, FiCode, FiCpu, FiCloudOff
+  FiArrowRight, FiCode, FiCpu
 } from 'react-icons/fi';
 import { interviewAPI, codeAPI } from '../services/api';
 import { useVoice } from '../hooks/useVoice';
-import { useAIStatus } from '../hooks/useAIStatus';
 import MicButton from '../components/interview/MicButton';
 import VoiceVisualizer from '../components/interview/VoiceVisualizer';
 import Captions from '../components/interview/Captions';
@@ -52,8 +51,6 @@ export default function InterviewRoom() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { micOn, aiSpeaking, transcript, toggleMic, speak, cancelSpeech, isSupported } = useVoice();
-
-  const { aiAvailable } = useAIStatus();
 
   const [mode, setMode] = useState('');
   const [difficulty, setDifficulty] = useState('easy');
@@ -243,13 +240,6 @@ export default function InterviewRoom() {
     );
   }
 
-  const offlineBanner = !aiAvailable && (
-    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-400/20 text-xs text-amber-200 mb-3">
-      <FiCloudOff className="w-3 h-3 shrink-0" />
-      <span>AI service is unavailable. You cannot submit answers right now.</span>
-    </div>
-  );
-
   if (!isSupported) {
     return (
       <div className="min-h-screen flex items-center justify-center mesh-bg px-4 pt-16">
@@ -283,7 +273,6 @@ export default function InterviewRoom() {
 
   const conversationPanel = (
     <div className="flex flex-col h-full">
-      {offlineBanner}
       {error && (
         <div className="flex items-center gap-2 px-3 py-2 mb-3 rounded-lg bg-rose-500/10 border border-rose-400/20 text-xs text-rose-200">
           <FiAlertTriangle className="w-3 h-3 shrink-0" />
@@ -404,7 +393,7 @@ export default function InterviewRoom() {
             <p className="text-xs text-white/30 text-center py-1">Your responses will appear here</p>
           ) : (
             <div className="space-y-1.5">
-              {conversations.toReversed().slice(0, 3).toReversed().map((c, i) => (
+              {conversations.slice().reverse().slice(0, 3).reverse().map((c, i) => (
                 c.answer && c.answer !== '[Code Submission]' && (
                   <p key={i} className="text-xs text-white/50 truncate flex items-start gap-1.5">
                     <FiCheckCircle className="w-3 h-3 text-emerald-400/70 mt-0.5 shrink-0" />

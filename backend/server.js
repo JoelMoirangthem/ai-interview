@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const cookieParser = require('cookie-parser');
 const mongoSanitize = require('express-mongo-sanitize');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
@@ -40,13 +41,22 @@ app.use(helmet({
 }));
 
 app.use(cors({
-  origin: process.env.CORS_ORIGIN
-    ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
-    : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000', 'http://127.0.0.1:5173'],
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true);
+    const allowed = [
+      'http://localhost:5173', 'http://localhost:5174',
+      'http://localhost:3000', 'http://127.0.0.1:5173',
+      ...(process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map(o => o.trim()) : [])
+    ];
+    const match = allowed.some(a => a === origin) || /\.onrender\.com$/.test(origin);
+    cb(null, match);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+app.use(cookieParser());
 
 app.use(mongoSanitize());
 
@@ -67,7 +77,7 @@ app.get('/api/health', (req, res) => {
 
 app.get('/api/health/ai', async (req, res) => {
   const available = await checkAIAvailability();
-  res.json({ available, mode: available ? 'ai' : 'fallback', timestamp: new Date().toISOString() });
+  res.json({ available, timestamp: new Date().toISOString() });
 });
 
 app.use((req, res) => {
