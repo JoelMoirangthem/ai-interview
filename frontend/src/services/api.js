@@ -9,6 +9,29 @@ const api = axios.create({
   timeout: 45000
 });
 
+const TOKEN_KEY = 'auth_token';
+
+export function getToken() {
+  return sessionStorage.getItem(TOKEN_KEY);
+}
+
+export function setToken(token) {
+  if (token) sessionStorage.setItem(TOKEN_KEY, token);
+  else sessionStorage.removeItem(TOKEN_KEY);
+}
+
+export function clearToken() {
+  sessionStorage.removeItem(TOKEN_KEY);
+}
+
+api.interceptors.request.use((config) => {
+  const token = getToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 export const authAPI = {
   googleLogin: (data) => api.post('/auth/google', data),
   logout: () => api.post('/auth/logout'),

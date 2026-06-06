@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { authAPI } from '../services/api';
+import { authAPI, setToken, clearToken } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -10,14 +10,19 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     authAPI.getMe()
       .then(res => setUser(res.data))
-      .catch(() => setUser(null))
+      .catch(() => {
+        setUser(null);
+        clearToken();
+      })
       .finally(() => setLoading(false));
   }, []);
 
   const googleLogin = async ({ uid, email, name, photoURL }) => {
     const res = await authAPI.googleLogin({ uid, email, name, photoURL });
-    localStorage.setItem('user', JSON.stringify(res.data.user));
-    setUser(res.data.user);
+    const { token, user: userData } = res.data;
+    if (token) setToken(token);
+    localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData);
     return res.data;
   };
 
@@ -27,6 +32,7 @@ export function AuthProvider({ children }) {
     } catch {
       // ignore
     }
+    clearToken();
     localStorage.removeItem('user');
     setUser(null);
   };
