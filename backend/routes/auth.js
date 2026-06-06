@@ -8,11 +8,10 @@ const { protect } = require('../middleware/auth');
 const router = express.Router();
 
 router.post('/logout', (req, res) => {
-  const isProduction = process.env.NODE_ENV === 'production';
   res.clearCookie('token', {
     httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? 'none' : 'lax'
+    secure: req.secure,
+    sameSite: req.secure ? 'none' : 'lax'
   });
   res.json({ message: 'Logged out successfully' });
 });

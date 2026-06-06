@@ -43,11 +43,10 @@ const googleAuth = async (req, res) => {
 
     const token = generateToken(user._id);
 
-    const isProduction = process.env.NODE_ENV === 'production';
     res.cookie('token', token, {
       httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? 'none' : 'lax',
+      secure: req.secure,
+      sameSite: req.secure ? 'none' : 'lax',
       maxAge: 30 * 24 * 60 * 60 * 1000
     });
 
