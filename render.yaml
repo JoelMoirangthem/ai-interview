@@ -3,10 +3,11 @@ services:
     name: ai-interview-coach-api
     runtime: node
     repo: https://github.com/JoelMoirangthem/ai-interview
+    rootDir: backend
     plan: free
     region: oregon
-    buildCommand: cd backend && npm install
-    startCommand: cd backend && node server.js
+    buildCommand: npm install
+    startCommand: node server.js
     healthCheckPath: /api/health
     envVars:
       - key: NODE_VERSION
